@@ -1,16 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import UserInfo from "./UserInfo";
 
 const MobileMenu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const { data: session } = useSession();
   const user = session?.user;
 
-  // Logged in হলে desktop-এর মতো UserInfo দেখাবে
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        handleClickOutside
+      );
+    };
+  }, []);
+
   if (user) {
     return (
       <div className="sm:hidden">
@@ -21,11 +41,12 @@ const MobileMenu = () => {
 
   // Logged out হলে hamburger দেখাবে
   return (
-    <div className="relative sm:hidden">
+    <div ref={menuRef} className="relative sm:hidden">
       <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        onClick={() => setIsMenuOpen((prev) => !prev)}
         className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-xl text-gray-700 transition hover:bg-gray-50"
         aria-label="Menu"
+        aria-expanded={isMenuOpen}
       >
         {isMenuOpen ? "✕" : "☰"}
       </button>
